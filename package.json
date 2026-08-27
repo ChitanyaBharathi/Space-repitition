@@ -1,0 +1,12 @@
+{
+  "name": "mindforge-workspace",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "test": "npm --prefix frontend run test",
+    "backend:dev": "python -m uvicorn app.main:app --reload --port 8000 --app-dir backend",
+    "backend:test": "python -m pytest backend/tests"
+  }
+}

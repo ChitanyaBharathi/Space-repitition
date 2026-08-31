@@ -23,7 +23,7 @@ class DeckResponse(BaseModel):
 
 # Card Schemas
 class CardCreate(BaseModel):
-    deck_id: str
+    deck_id: Optional[str] = None
     front_content: str = Field(..., min_length=1)
     back_content: str = Field(..., min_length=1)
     tags: Optional[List[str]] = []
@@ -50,6 +50,7 @@ class CardResponse(BaseModel):
 class BulkImportRequest(BaseModel):
     deck_id: str
     cards: List[CardCreate]
+
 
 # Review Schemas
 class SingleReviewSubmission(BaseModel):

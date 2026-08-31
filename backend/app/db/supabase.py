@@ -47,3 +47,12 @@ class SupabaseService:
             if res.status_code >= 400:
                 raise HTTPException(status_code=res.status_code, detail=res.text)
             return res.json()
+
+    async def rpc(self, function_name: str, payload: Dict[str, Any]) -> Any:
+        url = f"{settings.SUPABASE_URL.rstrip('/')}/rest/v1/rpc/{function_name}"
+        async with httpx.AsyncClient() as client:
+            res = await client.post(url, headers=self.headers, json=payload, timeout=20.0)
+            if res.status_code >= 400:
+                raise HTTPException(status_code=res.status_code, detail=res.text)
+            return res.json()
+

@@ -32,6 +32,7 @@ export const BattleArena: React.FC<BattleArenaProps> = ({
   const [isFlipped, setIsFlipped] = useState(false);
   const [cardStartTime, setCardStartTime] = useState<number>(Date.now());
   const [fumbleShake, setFumbleShake] = useState(false);
+  const [transitionState, setTransitionState] = useState<'idle' | 'exit-left' | 'exit-right' | 'enter'>('enter');
   
   // Monster state
   const [monster, setMonster] = useState<Monster>({
@@ -125,18 +126,26 @@ export const BattleArena: React.FC<BattleArenaProps> = ({
         onUpdateProfile({ current_hp: nextPlayerHp });
       }
 
-      // Submit review to backend API
-      await onReviewSubmit([{ card_id: currentCard.id, rating, review_duration_ms: durationMs }]);
+      // Submit review to backend API asynchronously without blocking UI
+      onReviewSubmit([{ card_id: currentCard.id, rating, review_duration_ms: durationMs }]);
       setSessionReviewedCount((prev) => prev + 1);
 
-      // Advance queue or complete battle
-      if (currentIndex < queue.length - 1) {
-        setCurrentIndex((prev) => prev + 1);
-      } else {
-        // Queue Cleared!
-        confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-        setIsVictoryModalOpen(true);
-      }
+      // Trigger smooth exit animation
+      setTransitionState(rating === 1 ? 'exit-left' : 'exit-right');
+
+      setTimeout(() => {
+        setIsFlipped(false);
+        if (currentIndex < queue.length - 1) {
+          setCurrentIndex((prev) => prev + 1);
+          setTransitionState('enter');
+          setTimeout(() => setTransitionState('idle'), 280);
+        } else {
+          // Queue Cleared!
+          confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
+          setIsVictoryModalOpen(true);
+          setTransitionState('idle');
+        }
+      }, 200);
     },
     [currentCard, cardStartTime, activeShields, profile, currentIndex, queue.length, onReviewSubmit, onUpdateProfile]
   );
@@ -269,6 +278,14 @@ export const BattleArena: React.FC<BattleArenaProps> = ({
           onClick={() => setIsFlipped(!isFlipped)}
           className={`relative w-full min-h-[320px] glass-card rounded-3xl p-8 cursor-pointer transition-transform duration-500 transform-style-preserve-3d shadow-2xl border border-slate-700/60 ${
             isFlipped ? 'rotate-y-180' : ''
+          } ${
+            transitionState === 'exit-left'
+              ? 'animate-card-exit-left'
+              : transitionState === 'exit-right'
+              ? 'animate-card-exit-right'
+              : transitionState === 'enter'
+              ? 'animate-card-enter-next'
+              : ''
           }`}
         >
           {/* Card Front Prompt */}

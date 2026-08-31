@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap');
 @import 'katex/dist/katex.min.css';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 :root {
   --bg-slate: #0F172A;
@@ -101,8 +101,49 @@ code, pre, .font-code {
   50% { box-shadow: 0 0 30px rgba(255, 90, 54, 0.7); }
 }
 
-.animate-pulse-glow {
-  animation: pulseGlow 2s infinite;
+@keyframes cardExitLeft {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-120px) scale(0.9) rotate(-6deg);
+  }
+}
+
+@keyframes cardExitRight {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(120px) scale(0.9) rotate(6deg);
+  }
+}
+
+@keyframes cardEnterNext {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-card-exit-left {
+  animation: cardExitLeft 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-card-exit-right {
+  animation: cardExitRight 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-card-enter-next {
+  animation: cardEnterNext 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Scrollbar customization */

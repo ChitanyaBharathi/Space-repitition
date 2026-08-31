@@ -14,6 +14,7 @@ interface DeckManagerProps {
   onUpdateCard: (cardId: string, front: string, back: string, tags: string[]) => Promise<void>;
   onDeleteCard: (cardId: string) => Promise<void>;
   onBulkImport: (deckId: string, cards: { front_content: string; back_content: string; tags?: string[] }[]) => Promise<void>;
+  onOpenAiModal?: () => void;
 }
 
 export const DeckManager: React.FC<DeckManagerProps> = ({
@@ -26,6 +27,7 @@ export const DeckManager: React.FC<DeckManagerProps> = ({
   onUpdateCard,
   onDeleteCard,
   onBulkImport,
+  onOpenAiModal,
 }) => {
   const [selectedDeck, setSelectedDeck] = useState<Deck | null>(null);
   const [deckCards, setDeckCards] = useState<Card[]>([]);
@@ -143,12 +145,22 @@ export const DeckManager: React.FC<DeckManagerProps> = ({
           <p className="text-slate-400 text-xs">Organize study decks, edit Markdown flashcards, or bulk import cards.</p>
         </div>
 
-        <button
-          onClick={() => setIsCreatingDeck(true)}
-          className="flex items-center gap-2 bg-gradient-to-r from-coral-500 to-amber-500 hover:from-coral-600 hover:to-amber-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-coral-500/20 transition-all text-xs"
-        >
-          <Plus className="w-4 h-4" /> Create New Deck
-        </button>
+        <div className="flex items-center gap-3">
+          {onOpenAiModal && (
+            <button
+              onClick={onOpenAiModal}
+              className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-purple-500/25 transition-all text-xs"
+            >
+              <span className="text-sm">✨</span> AI Generate from PDF
+            </button>
+          )}
+          <button
+            onClick={() => setIsCreatingDeck(true)}
+            className="flex items-center gap-2 bg-gradient-to-r from-coral-500 to-amber-500 hover:from-coral-600 hover:to-amber-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-coral-500/20 transition-all text-xs"
+          >
+            <Plus className="w-4 h-4" /> Create New Deck
+          </button>
+        </div>
       </div>
 
       {/* Create Deck Modal */}

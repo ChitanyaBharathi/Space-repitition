@@ -8,6 +8,7 @@ import { DeckManager } from './components/DeckManager';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import { PlayerProfileView } from './components/PlayerProfileView';
 import { AuthModal } from './components/AuthModal';
+import { AiDeckModal } from './components/AiDeckModal';
 import { OfflineBanner, AuthExpiredModal, ErrorToast, LoadingSkeleton } from './components/StatusBanners';
 
 export const AppContent: React.FC = () => {
@@ -28,6 +29,8 @@ export const AppContent: React.FC = () => {
   const [isAuthExpired, setIsAuthExpired] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState<boolean>(false);
+
 
   const handleError = useCallback((err: any) => {
     if (err instanceof ApiError) {
@@ -184,6 +187,31 @@ export const AppContent: React.FC = () => {
     }
   };
 
+  const handleAiDeckCreated = async (
+    deckData: { id: string; title: string; description: string },
+    cards: Array<{ front_content: string; back_content: string; tags: string[] }>
+  ) => {
+    if (!token) return setIsAuthModalOpen(true);
+    try {
+      const newDeck = await api.createDeck(token, {
+        title: deckData.title,
+        description: deckData.description,
+      });
+      setDecks((prev) => [newDeck, ...prev]);
+
+      if (cards.length > 0) {
+        await api.bulkImportCards(token, {
+          deck_id: newDeck.id,
+          cards,
+        });
+      }
+      await fetchData();
+    } catch (err) {
+      handleError(err);
+      throw err;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-ivory flex flex-col font-body">
       
@@ -245,6 +273,7 @@ export const AppContent: React.FC = () => {
                 onUpdateCard={handleUpdateCard}
                 onDeleteCard={handleDeleteCard}
                 onBulkImport={handleBulkImport}
+                onOpenAiModal={() => setIsAiModalOpen(true)}
               />
             )}
 
@@ -254,6 +283,14 @@ export const AppContent: React.FC = () => {
           </>
         )}
       </main>
+
+      {/* AI Deck Generator Modal */}
+      <AiDeckModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        token={token}
+        onDeckCreated={handleAiDeckCreated}
+      />
 
       {/* Auth Modal */}
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
@@ -273,3 +310,4 @@ export const AppContent: React.FC = () => {
     </div>
   );
 };
+

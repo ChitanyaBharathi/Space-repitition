@@ -38,7 +38,13 @@ async function request<T>(endpoint: string, options: RequestInit = {}, token?: s
       let errText = 'API request failed';
       try {
         const body = await res.json();
-        errText = body.detail || body.message || errText;
+        if (Array.isArray(body.detail)) {
+          errText = body.detail.map((d: any) => d.msg || `${d.loc?.join('.')}: ${d.msg}`).join(', ');
+        } else if (typeof body.detail === 'string') {
+          errText = body.detail;
+        } else if (body.message) {
+          errText = body.message;
+        }
       } catch {
         errText = await res.text();
       }
@@ -96,4 +102,80 @@ export const api = {
 
   // Analytics
   getAnalytics: (token: string) => request<AnalyticsData>('/analytics', {}, token),
+
+  // AI Flashcard Generation (RAG)
+  generateDeckFromPdf: async (
+    token: string | null,
+    file: File,
+    cardCount: number = 10,
+    focusMode: string = 'high_yield',
+    deckTitle?: string
+  ): Promise<{
+    suggested_deck_title: string;
+    summary: string;
+    total_generated: number;
+    cards: Array<{
+      front: string;
+      back: string;
+      page_reference: string;
+      tags: string[];
+      difficulty: string;
+    }>;
+  }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('card_count', cardCount.toString());
+    formData.append('focus_mode', focusMode);
+    if (deckTitle) {
+      formData.append('deck_title', deckTitle);
+    }
+
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const url = `${API_URL}/api/v1/ai/generate-from-pdf`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!res.ok) {
+      let errText = 'Failed to generate deck from PDF';
+      try {
+        const body = await res.json();
+        errText = body.detail || body.message || errText;
+      } catch {
+        errText = await res.text();
+      }
+      throw new ApiError(errText, res.status);
+    }
+
+    return await res.json();
+  },
+
+  generateDeckFromText: (
+    token: string | null,
+    data: {
+      notes_text: string;
+      card_count?: number;
+      focus_mode?: string;
+      deck_title?: string;
+    }
+  ) =>
+    request<{
+      suggested_deck_title: string;
+      summary: string;
+      total_generated: number;
+      cards: Array<{
+        front: string;
+        back: string;
+        page_reference: string;
+        tags: string[];
+        difficulty: string;
+      }>;
+    }>('/ai/generate-from-text', { method: 'POST', body: JSON.stringify(data) }, token),
 };
+
